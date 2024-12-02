@@ -104,8 +104,8 @@ class ExpenseManager:
 
                 budget_this_month = 'N/A'
                 for line in lines:
-                    if line.strip().split(',')[0] == date.today().month:
-                        budget_this_month = line[2]
+                    if line.strip().split(',')[0] == months[date.today().month]:
+                        budget_this_month = int(line.strip().split(',')[1])
 
                 expenses_this_month = []
                 for expense in expenses:
@@ -116,7 +116,16 @@ class ExpenseManager:
                 print(f'{len(expenses_this_month)} expense{'' if len(expenses_this_month) == 1 else 's'} in total', end='\n\n')
                 for expense in expenses_this_month:
                     print(f'{expense.amount}$ -- {expense.description} -- id: {expense.id} -- date: {expense.created_at.date()}', end='\n\n')
+
+                spent = cls.summary(month=date.today().month)
+
                 print(f'Budget this month: {budget_this_month}{'$' if budget_this_month != 'N/A' else ''}')
+                print(f'Spent: {spent}$')
+
+                if budget_this_month - spent > 0:
+                    print(f'Money left to spend: {budget_this_month - spent}$')
+                elif budget_this_month - spent < 0:
+                    print(f'WARNING!: You have exceeded your monthly budget by {budget_this_month - spent}$')
 
 
             case 'all':
