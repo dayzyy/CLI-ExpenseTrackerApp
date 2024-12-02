@@ -1,6 +1,12 @@
 from datetime import datetime, date
 import calendar
 
+month_names = calendar.month_name[1:]
+months = {}
+
+for i in range(12):
+    months[i + 1] = month_names[i]
+
 class ExpenseManager:
     # Checks if databse (db.csv) file already exists. If it doesnt, the function creates it. Does the same for budgets.csv
     @classmethod
@@ -51,13 +57,10 @@ class ExpenseManager:
             lines = database.readlines()
             
         with open('db.csv', 'w') as database:
-            removed = False
             for line in lines:
                 columns = line.split(',')
                 if int(columns[0]) != id:
                     database.write(line)
-                else:
-                    removed = True
 
     # Returns all the Expense instances from the database
     @classmethod
@@ -91,14 +94,57 @@ class ExpenseManager:
         return summary
 
     @classmethod
-    def display(cls):
+    def display(cls, month=None):
         expenses = cls.all()
-        
-        print('********** EXPENSES **********')
-        print(f'{len(expenses)} expense{'' if len(expenses) == 1 else 's'} in total', end='\n\n')
-        for expense in expenses:
-            print(f'{expense.amount}$ -- {expense.description} -- id: {expense.id} -- date: {expense.created_at.date()}', end=f'{'\n\n' if expense != expenses[-1]  else '\n'}')
 
+        match month:
+            case None:
+                with open('budgets.csv', 'r') as budgets:
+                    lines = budgets.readlines()
+
+                budget_this_month = 'N/A'
+                for line in lines:
+                    if line.strip().split(',')[0] == date.today().month:
+                        budget_this_month = line[2]
+
+                expenses_this_month = []
+                for expense in expenses:
+                    if expense.created_at.month == date.today().month:
+                        expenses_this_month.append(expense)
+
+                print('**********EXPENSES THIS MONTH**********')
+                print(f'{len(expenses_this_month)} expense{'' if len(expenses_this_month) == 1 else 's'} in total', end='\n\n')
+                for expense in expenses_this_month:
+                    print(f'{expense.amount}$ -- {expense.description} -- id: {expense.id} -- date: {expense.created_at.date()}', end='\n\n')
+                print(f'Budget this month: {budget_this_month}{'$' if budget_this_month != 'N/A' else ''}')
+
+
+            case 'all':
+                print('**********EXPENSES THIS YEAR**********')
+                print(f'{len(expenses)} expense{'' if len(expenses) == 1 else 's'} in total', end='\n\n')
+                for expense in expenses:
+                    print(f'{expense.amount}$ -- {expense.description} -- id: {expense.id} -- date: {expense.created_at.date()}', end=f'{'\n\n' if expense != expenses[-1]  else '\n'}')
+
+            case _:
+                with open('budgets.csv', 'r') as budgets:
+                    lines = budgets.readlines()
+
+                budget_this_month = 'N/A'
+                for line in lines:
+                    if line.strip().split(',')[0] == months[month]:
+                        budget_this_month = line.strip().split(',')[1]
+
+                expenses_for_month = []
+                for expense in expenses:
+                    if expense.created_at.month == month:
+                        expenses_for_month.append(expense)
+
+                print(f'**********EXPENSES IN {months[month].upper()}**********')
+                print(f'{len(expenses_for_month)} expense{'' if len(expenses_for_month) == 1 else 's'} in total', end='\n\n')
+                for expense in expenses_for_month:
+                    print(f'{expense.amount}$ -- {expense.description} -- id: {expense.id} -- date: {expense.created_at.date()}', end='\n\n')
+                print(f'Budget this month: {budget_this_month}{'$' if budget_this_month != 'N/A' else ''}')
+        
 class Expense:
     objects = ExpenseManager
 
@@ -109,7 +155,7 @@ class Expense:
         self.created_at = datetime.strptime(created_at, '%Y-%m-%d')
 
     @classmethod
-    def set_budget(cls, month, budget):
+    def set_budget(cls, budget, month=months[date.today().month]):
         with open('budgets.csv', 'r') as budgets:
             lines = budgets.readlines()
 
