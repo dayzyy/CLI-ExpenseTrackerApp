@@ -1,6 +1,6 @@
 import argparse
 
-from models import  Expense, ExpenseManager, months
+from models import  Expense, ExpenseManager, months, unknown_month
 
 ExpenseManager.database()
 
@@ -33,7 +33,6 @@ set_parser.add_argument('-a', '--amount', type=int, help='Amount of the budget',
 
 
 args = parser.parse_args()
-print(args)
 
 match args.command:
     case 'add':
@@ -42,19 +41,27 @@ match args.command:
         if args.list_command == 'all':
             Expense.objects.display(month='all')
         elif args.month != None:
+            if unknown_month(args.month):
+                exit()
             Expense.objects.display(month=args.month)
         else:
             Expense.objects.display()
     case 'delete':
+        if Expense.objects.DoesNotExist(args.id):
+            exit()
         Expense.objects.remove(args.id)
     case 'summary':
         if args.month == None:
             print(f'Summary of all expenses: {Expense.objects.summary()}$')
         else:
+            if unknown_month(args.month):
+                exit()
             print(f'Summary of expenses in {months[args.month]}: {Expense.objects.summary(month=args.month)}$')
     case 'budget':
         if args.budget_command == 'set':
             if args.month == None:
                 Expense.set_budget(args.amount)
             else:
+                if unknown_month(args.month):
+                    exit()
                 Expense.set_budget(args.amount, months[args.month])

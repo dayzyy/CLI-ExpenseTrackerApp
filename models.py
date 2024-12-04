@@ -4,6 +4,21 @@ import calendar
 month_names = calendar.month_name[1:]
 months = {}
 
+def unknown_month(n):
+    if n < 1 or n > 12 :
+        suffix = 'th'
+        _n = abs(n) % 10
+        match _n:
+            case -1: suffix = 'st'
+            case -2: suffix = 'nd'
+            case -3: suffix = 'rd'
+            case _: pass
+
+        print(f'{n}{suffix} month is unknown to humanity!')
+        return True
+    else:
+        return False
+
 for i in range(12):
     months[i + 1] = month_names[i]
 
@@ -78,6 +93,17 @@ class ExpenseManager:
         return expenses
 
     @classmethod
+    def DoesNotExist(cls, id):
+        expneses = cls.all()
+
+        for expense in expneses:
+            if expense.id == id:
+                return False
+        print(f'ValueError: No expense with id: {id}!')
+        return True
+    
+    # Returns summray of expenses for specified month. If month=0 is left to default it returns summary of expenses throughout the whole year
+    @classmethod
     def summary(cls, month=0):
         expenses = cls.all()
         summary = 0
@@ -105,7 +131,7 @@ class ExpenseManager:
                 budget_this_month = 'N/A'
                 for line in lines:
                     if line.strip().split(',')[0] == months[date.today().month]:
-                        budget_this_month = int(line.strip().split(',')[1])
+                        budget_this_month = line.strip().split(',')[1]
 
                 expenses_this_month = []
                 for expense in expenses:
@@ -122,10 +148,11 @@ class ExpenseManager:
                 print(f'Budget this month: {budget_this_month}{'$' if budget_this_month != 'N/A' else ''}')
                 print(f'Spent: {spent}$')
 
-                if budget_this_month - spent > 0:
-                    print(f'Money left to spend: {budget_this_month - spent}$')
-                elif budget_this_month - spent < 0:
-                    print(f'WARNING!: You have exceeded your monthly budget by {budget_this_month - spent}$')
+                if budget_this_month != 'N/A':
+                    if int(budget_this_month) - spent > 0:
+                        print(f'Money left to spend: {int(budget_this_month) - spent}$')
+                    elif int(budget_this_month) - spent < 0:
+                        print(f'WARNING!: You have exceeded your monthly budget by {int(budget_this_month) - spent}$')
 
 
             case 'all':
@@ -148,12 +175,21 @@ class ExpenseManager:
                     if expense.created_at.month == month:
                         expenses_for_month.append(expense)
 
+                spent = cls.summary(month=month)
+
                 print(f'**********EXPENSES IN {months[month].upper()}**********')
                 print(f'{len(expenses_for_month)} expense{'' if len(expenses_for_month) == 1 else 's'} in total', end='\n\n')
                 for expense in expenses_for_month:
                     print(f'{expense.amount}$ -- {expense.description} -- id: {expense.id} -- date: {expense.created_at.date()}', end='\n\n')
                 print(f'Budget this month: {budget_this_month}{'$' if budget_this_month != 'N/A' else ''}')
-        
+                print(f'Spent: {spent}$')
+
+                if budget_this_month != 'N/A':
+                    if int(budget_this_month) - spent > 0:
+                        print(f'Money left to spend: {int(budget_this_month) - spent}$')
+                    elif int(budget_this_month) - spent < 0:
+                        print(f'WARNING!: You have exceeded your monthly budget by {int(budget_this_month) - spent}$')
+
 class Expense:
     objects = ExpenseManager
 
@@ -162,7 +198,8 @@ class Expense:
         self.amount = float(amount)
         self.description = description
         self.created_at = datetime.strptime(created_at, '%Y-%m-%d')
-
+    
+    # Sets a budget for the specified month. If left to default, sets budget for the current month
     @classmethod
     def set_budget(cls, budget, month=months[date.today().month]):
         with open('budgets.csv', 'r') as budgets:
