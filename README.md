@@ -1,6 +1,7 @@
 # Expense Manager CLI Application
 
 Using this application you can **create** and **delete** expneses, as well as **set a budget** for each month. Afterwards you can display them and keep track of your expenses throughout the whole year. 
+
 If you go over your budget for the current month the application will warn you.
 
 ## Features
