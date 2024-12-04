@@ -24,13 +24,14 @@ git clone https://github.com/dayzyy/CLI-ExpenseTrackerApp.git
 cd CLI-ExpenseTrackerApp/
 ```
 
-You are all set! Now you can interact with the app using commands listed below  
+You are all set! Now you can interact with the app using commands listed below
+
 You can also use the comand line to see all available commands:
 ```python
 python3 manage.py -h
 ```
 
-## commands
+## Commands
 
 ```python
 # To add an expense
